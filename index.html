@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Archivio Digitale Classe C</title>
+    <!-- Caricamento di Tailwind CSS per lo styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #f0f4f8 0%, #ffffff 100%); /* Sfondo più neutro e luminoso */
+            min-height: 100vh;
+        }
+        .app-container {
+            border-radius: 1.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.05); /* Ombra molto morbida */
+        }
+        
+        /* --- ANIMAZIONI --- */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-enter {
+            opacity: 0; /* Parte invisibile */
+            animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* Classi per il ritardo dell'animazione (staggering) */
+        .delay-100 { animation-delay: 100ms; }
+        .delay-200 { animation-delay: 200ms; }
+        .delay-300 { animation-delay: 300ms; }
+        .delay-400 { animation-delay: 400ms; }
+        .delay-500 { animation-delay: 500ms; }
+        .delay-600 { animation-delay: 600ms; } 
+
+
+        /* --- STILI CARDS --- */
+        .subject-card {
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+        .subject-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            border-color: #cbd5e1;
+        }
+
+        /* Stile File Card (Risoluzione problema "rientranza") */
+        .file-card {
+            background-color: white;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05); /* Ombra esterna leggera */
+            transition: all 0.2s ease;
+        }
+        
+        .file-card:hover {
+            border-color: #cbd5e1;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); /* Si alza leggermente */
+            transform: translateY(-2px);
+        }
+
+        /* Stili per i bottoni di download semplici */
+        .simple-download-btn {
+            color: #4f46e5;
+            background-color: transparent;
+            border: 1px solid #e0e7ff;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .simple-download-btn:hover {
+            background-color: #eef2ff;
+            border-color: #4f46e5;
+            color: #4338ca;
+        }
+
+        .loader {
+            border-top-color: #4f46e5;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-8 flex justify-center items-start">
+
+    <div class="app-container max-w-6xl w-full bg-white p-6 sm:p-12 border border-gray-100">
+
+        <!-- Intestazione -->
+        <header class="mb-12 text-center pb-6 border-b border-gray-100 animate-enter">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-800 tracking-tight">
+                Archivio <span class="text-indigo-600">Classe C</span>
+            </h1>
+            <p class="mt-4 text-lg text-slate-500">Tutto il materiale scolastico, organizzato e pronto all'uso.</p>
+        </header>
+
+        <!-- Area Contenuto Dinamico -->
+        <main id="content-area" class="min-h-[400px]">
+            <div id="home-view" class="active">
+                <!-- Contenuto Home Iniziale (Materie) -->
+            </div>
+            <div id="subject-view" class="hidden">
+                <!-- Contenuto Materia Selezionata -->
+            </div>
+            
+            <!-- Messaggio di caricamento -->
+            <div id="loading-spinner" class="hidden flex flex-col justify-center items-center py-20 animate-enter">
+                <div class="loader rounded-full border-4 border-gray-100 h-12 w-12 mb-4"></div>
+                <p class="text-lg text-gray-500 font-medium">Sto recuperando i file...</p>
+            </div>
+        </main>
+    </div>
+
+    <!-- Modal per la simulazione del download / dettagli compito -->
+    <div id="download-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center p-4 z-50 transition-opacity duration-300">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 transform transition-all scale-100 animate-enter">
+            <div class="text-center">
+                <div id="modal-icon" class="mx-auto flex items-center justify-center h-14 w-14 rounded-full bg-green-50 mb-4">
+                    <!-- Icona di default per il download -->
+                    <svg class="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                </div>
+                <h3 id="modal-title" class="text-xl font-bold text-slate-800 mb-2">Download Avviato</h3>
+                <p id="modal-message" class="text-slate-500 text-sm mb-6">Stai scaricando: <br><span id="modal-filename" class="font-semibold text-indigo-600"></span></p>
+                <button onclick="closeModal()" class="w-full bg-slate-900 hover:bg-slate-800 text-white font-semibold py-3 px-4 rounded-xl transition duration-200 shadow-lg shadow-slate-200">
+                    Chiudi
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Dati aggiornati con le categorie richieste dall'utente, inclusa "Tecnologia Compiti"
+        const subjectData = {
+            "Tecnologia tavole": {
+                // Icona: Righello e squadra (disegno tecnico)
+                icon: '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"></path></svg>',
+                color: 'text-blue-600 bg-blue-50',
+                files: [
+                    { name: "Modello A4 Orizzontale (DWG)", link: "https://drive.google.com/uc?export=download&id=1s-dNCkQF-P10B-O603sjJmxrgXhtgx_W" },
+                    { name: "Modello A4 Verticale (DWG)", link: "https://drive.google.com/uc?export=download&id=11JO0eFagzK3E5LVVwkTZQhsyVJewldyg" },
+                    { name: "Esercitazione 4 Coordinate (DWG)", link: "https://drive.google.com/uc?export=download&id=11wF2AFEZM4icpUMpB_3sS1b0c2Xpy53d" },
+                    { name: "Esercitazione 1 Basico (DWG)", link: "https://drive.google.com/uc?export=download&id=1oKhWr05Qa3ta7Kaeyk4pEMnLmtVv3Ozh" },
+                    { name: "Tav.11 Assonometria (DWG)", link: "https://drive.google.com/uc?export=download&id=1gbUxgbB3_Ae_Qr3pdWmz9VCJfULr9p9Z" },
+                    { name: "Appunti Autocad (DOCX)", link: "https://drive.google.com/uc?export=download&id=1s7FAoSSCOO-uNsaqX4w-QAjutrWZ4B_X" },
+                    { name: "Problema 1 PAG 20 (DWG)", link: "https://drive.google.com/uc?export=download&id=140BtVZ-SpLQTF90ylIT_nEpoxLrz19A1" },
+                    { name: "Problema 2 PAG 20 (DWG)", link: "https://drive.google.com/uc?export=download&id=1qslFE6_WCwgR8QncS2KPxRcHciIyRb9O" },
+                    { name: "Problema 3 PAG 21 (DWG)", link: "https://drive.google.com/uc?export=download&id=1l3wheDSHyl4URiFC-59L9P4WfzqE9-H8" },
+                    { name: "Probelma 4 PAG 21 (DWG)", link: "https://drive.google.com/uc?export=download&id=1LHVo-gIS8NWj7ITeQtewgYY76zOuyloC" },
+                    { name: "Problema 5 PAG 21 (DWG)", link: "https://drive.google.com/uc?export=download&id=1YMF-HymQ6zuWNGBZiuS9jCOVnt0u-Jx0" },
+                    { name: "Problema 6 PAG 22 (DWG)", link: "https://drive.google.com/uc?export=download&id=1-8B7yV8Y-jo-FoYnOrwt_nfTK8L4vy-D" },
+                    { name: "Probelma 7 PAG 23 (DWG)", link: "https://drive.google.com/uc?export=download&id=1Z34Cm5LlwQf_-pTNpSqPRnB2Z2tAFnWl" },
+                    { name: "Problema 8 PAG 23 (DWG)", link: "https://drive.google.com/uc?export=download&id=1Nz0YRJd7E6Mg1nVqGVQ3ywrr7wwcqsaV" },
+                    { name: "Probelma 9 PAG 23 (DWG)", link: "https://drive.google.com/uc?export=download&id=1XfGRmpGJPBVaHv6KMPezUE_JclF7yPr6" },
+                    { name: "Problema 10 PAG 23 (DWG)", link: "https://drive.google.com/uc?export=download&id=1YKeI1U_e-U1gcQyxjL3U9oLhdzesPkO5" },
+                    { name: "Probelma 11 PAG 24 (DWG)", link: "https://drive.google.com/uc?export=download&id=1iyiudbej8_hPEdT3oLpBDCeLdgzxbrce" },
+                    { name: "Problema 12 PAG 25 (DWG)", link: "https://drive.google.com/uc?export=download&id=1BuEHqjaRLWMHD8k6Bx70WMs_l2VZChmH" },
+                    { name: "Tav. 4 Verifica (DWG)", link: "https://drive.google.com/uc?export=download&id=1fYYma4CUsVXG8K4UgnXy7F92QIFTniyh" },
+                ]
+            },
+            "Italiano/Storia": {
+                // Icona: Libro aperto e orologio (letteratura e tempo)
+                icon: '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6.5v11M12 6.5c-2.485 0-4.5-2.015-4.5-4.5s2.015-4.5 4.5-4.5 4.5 2.015 4.5 4.5S14.485 6.5 12 6.5zm0 11c2.485 0 4.5 2.015 4.5 4.5s-2.015 4.5-4.5 4.5-4.5-2.015-4.5-4.5 2.015-4.5 4.5-4.5zM12 6v6m0 0l-3-3m3 3l3-3"></path></svg>',
+                color: 'text-rose-600 bg-rose-50',
+                files: [
+                    { name: "Link Padlet (COM)", link: "Padlet.com/acanforaprof/2c2526" }
+                    
+                ]
+            },
+            "Informatica": {
+                // Icona: Computer/Codice
+                icon: '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9.75 17L12 20.25 14.25 17m-4.5-5L12 8.25 14.25 12m-2.25 4.5h.008v.008h-.008v-.008zm-4.75 0h.008v.008h-.008v-.008zM12 2.25c5.385 0 9.75 4.365 9.75 9.75s-4.365 9.75-9.75 9.75-9.75-4.365-9.75-9.75S6.615 2.25 12 2.25z"></path></svg>',
+                color: 'text-indigo-600 bg-indigo-50',
+                files: [
+                    { name: "Europei Calcio (EXCEl)", link: "https://drive.google.com/uc?export=download&id=1uW-9G_UX8ZjBp8qwmR7TB0ju7guksGEs" },
+                    { name: "Database Biblioteca (EXCEL)", link: "https://drive.google.com/uc?export=download&id=1fG7lOdlxxyMyh9h8I3uGDcQGgTB_rfGI" },
+                    { name: "Corso Informatica di base (PPTX)", link: "https://drive.google.com/uc?export=download&id=1b-67dELrlYC7dmZybS7qCoaDFYO6Be-j" },
+                    { name: "Esercizi 2 Senza formule (EXCEL)", link: "https://drive.google.com/uc?export=download&id=1xWoHbMtdQRze9KbE-NuPz-wVSXMUi1hW" },
+                    { name: "Corso Informatica di base (PPTX)", link: "https://drive.google.com/uc?export=download&id=1b-67dELrlYC7dmZybS7qCoaDFYO6Be-j" },
+                    { name: "Esercizi 2 Senza formule (EXCEL)", link: "https://drive.google.com/uc?export=download&id=1xWoHbMtdQRze9KbE-NuPz-wVSXMUi1hW" },
+                    { name: "Caratteristiche Del Testo - Prima Parte (HTML)", link: "https://drive.google.com/uc?export=download&id=1xRfuc2aohU926Fcv1LjHPw6Pc49doucM" },
+                    { name: "Google Verticale e Orizzontale (HTML)", link: "https://drive.google.com/uc?export=download&id=1BmKEFfvp6vyGEm7NAdRd-KrN9PLf-3gr" },
+                    { name: "Gestione del testo (HTML)", link: "https://drive.google.com/uc?export=download&id=1MHTiaOZP7IaTWXhXjTaumLgXBeAt6C7J" },
+                    { name: "Verifica 1 informatica (DOCX)", link: "https://drive.google.com/uc?export=download&id=1zrJaFDh0jZeVW1dMugsevWDPxqY5dYMr" },
+                    { name: "Gestione Linee (HTML)", link: "https://drive.google.com/uc?export=download&id=1SXw5i4xbu9FCCSgNzZ5x-dez-E53wHpl" },
+                    { name: "Gestione Titolo TAG HEADER (HTML)", link: "https://drive.google.com/uc?export=download&id=1b9OEFGxoEtn8cvj5glIz7PpSuMWd_-18" },
+                    { name: "Titolo Personalizzato (HTML)", link: "https://drive.google.com/uc?export=download&id=1E75SlXzEZs5jouTAGgvrQiSAUAMFCkM3" },
+                    { name: "Titoli Standard (HTML)", link: "https://drive.google.com/uc?export=download&id=1Pw7G7nO60l5WOiYkMjbbDEi0CE41RqwT" },
+                    { name: "Titoli Gruppi Allineati Diversamente (HTML)", link: "https://drive.google.com/uc?export=download&id=1XpD0w-unUsfz-0d3kGOKDi3uVd4pQhIK" },
+                    { name: "Titoli Centrati (HTML)", link: "https://drive.google.com/uc?export=download&id=1WQlbkEHGZWpA797GKkBv1Mc3FlnhqULu" },
+                    { name: "Primo titolo centrato (HTML)", link: "https://drive.google.com/uc?export=download&id=1N3YIzuqEArhutLcVx3WpV68t6kzAHcys" },
+                    { name: "Colore Sfondo (HTML)", link: "https://drive.google.com/uc?export=download&id=1afcB7xxT_6dloA0lT6n5jeLBV7bHqVwx" },
+                    { name: "Primo Sito (HTML)", link: "https://drive.google.com/uc?export=download&id=1r_N9KBryUgd2dJ_QjjSEKwrTzwx_qcTq" }
+                ]
+            },
+            "Matematica": {
+                // Icona: Simboli matematici
+                icon: '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 7h6m0 10v-3m-6 3V9m0 6h6m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>',
+                color: 'text-emerald-600 bg-emerald-50',
+                files: [
+                    { name: "Disequazioni Appunti (DOC)", link: "https://drive.google.com/uc?export=download&id=1ZcTLaplyzLzMohWWoupLMegzzygn1T_6" },
+                    { name: "Equazioni Fratte (DOC)", link: "https://drive.google.com/uc?export=download&id=1xS44YMKI3bIlPcbAz0UPfOSSOKb0AogO" },
+                    { name: "Equazioni secondo grado (DOC)", link: "https://drive.google.com/uc?export=download&id=1y1uc1Jcgddl-gpaamwOxIEu8cOEaWItZ" },
+                    { name: "Radicali (DOC)", link: "https://drive.google.com/uc?export=download&id=1tTxvIOipygwJY-I8RxvGUyRdeo9yVHtg" },
+                    { name: "Retta (DOC)", link: "https://drive.google.com/uc?export=download&id=1PwpakcCs4I-ShGfeJ29GGCajVJouBcag" },
+                    { name: "Correzione verifica EQ. Fratte (PDF)", link: "https://moodle.itismajo.it/pluginfile.php/260696/mod_resource/content/1/Correzione%20Equazioni%20fratte.pdf" },
+                ]
+            },
+             "Tecnologia Compiti": {
+                // Icona: Calendario / Checklist (Nuova icona per compiti)
+                icon: '<svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2-12H7a2 2 0 00-2 2v14a2 2 0 002 2h10a2 2 0 002-2V6a2 2 0 00-2-2zM9 1v2m6-2v2m-3 7h.01M15 11h.01M9 15h.01"></path></svg>',
+                color: 'text-orange-600 bg-orange-50',
+                files: [
+                    // I "file" qui simulano i compiti con la scadenza come "tipo"
+                    { name: "NON ESISTONO ANCORA QUESTE COSE (Scadenza 15/12)", link: "#task-1" },
+                    { name: "NON ESISTONO ANCORA QUESTE COSE (Scadenza 22/12)", link: "#task-2" },
+                    { name: "NON ESISTONO ANCORA QUESTE COSE (Compito in classe 10/01)", link: "#task-3" }
+                ]
+            }
+        };
+
+        const homeView = document.getElementById('home-view');
+        const subjectView = document.getElementById('subject-view');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const downloadModal = document.getElementById('download-modal');
+
+        // Riferimenti agli elementi interni del Modal per cambiarli dinamicamente
+        const modalIcon = document.getElementById('modal-icon');
+        const modalTitle = document.getElementById('modal-title');
+        const modalMessage = document.getElementById('modal-message');
+        const modalFilename = document.getElementById('modal-filename');
+
+
+        let currentPage = 'home';
+
+        function renderHomePage() {
+            let html = '<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">';
+
+            // Usa Object.keys per iterare sulle materie
+            Object.keys(subjectData).forEach((subject, index) => {
+                const data = subjectData[subject];
+                const fileCount = data.files.length;
+                // Calcola il ritardo dell'animazione
+                const delayClass = index < 6 ? `delay-${(index + 1) * 100}` : ''; // Aggiornato a 6 per la nuova card
+                
+                html += `
+                    <div onclick="showSubject('${subject}')" class="subject-card bg-white rounded-2xl p-6 cursor-pointer animate-enter ${delayClass}">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="p-3 rounded-xl ${data.color}">
+                                ${data.icon}
+                            </div>
+                            <span class="text-xs font-bold text-gray-400 bg-gray-50 px-2 py-1 rounded-md border border-gray-100">${fileCount} FILE</span>
+                        </div>
+                        <h3 class="text-xl font-bold text-slate-800">${subject}</h3>
+                        <p class="text-sm text-slate-500 mt-1">Materiali e dispense</p>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            homeView.innerHTML = html;
+        }
+
+        function renderSubjectPage(subject) {
+            const data = subjectData[subject];
+            const files = data ? data.files : [];
+            
+            let html = `
+                <div class="flex items-center justify-between mb-8 animate-enter">
+                    <button onclick="showPage('home')" class="group flex items-center text-slate-500 hover:text-indigo-600 font-medium transition duration-200">
+                        <div class="w-8 h-8 rounded-full bg-gray-50 group-hover:bg-indigo-50 flex items-center justify-center mr-3 transition duration-200">
+                            <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                        </div>
+                        Indietro
+                    </button>
+                    <div class="px-4 py-1 rounded-full ${data.color.replace('text-', 'bg-').replace('bg-', 'bg-opacity-10 text-')} font-bold text-sm">
+                        ${subject}
+                    </div>
+                </div>
+            `;
+
+            if (files.length === 0) {
+                html += '<div class="text-center py-12 bg-gray-50 rounded-2xl border border-gray-100 border-dashed animate-enter delay-100"><p class="text-gray-400">Nessun file presente.</p></div>';
+            } else {
+                let isTaskSection = subject === "Tecnologia Compiti";
+                html += '<ul class="space-y-4">';
+                
+                files.forEach((file, index) => {
+                    const fileNameParts = file.name.match(/\((.*?)\)/);
+                    let fileType = fileNameParts ? fileNameParts[1] : (isTaskSection ? 'TASK' : 'FILE');
+                    let cleanName = file.name.replace(/\s+\(.*?\)/, '');
+                    
+                    let buttonText = isTaskSection ? 'Dettagli' : 'Scarica';
+                    let linkHref = isTaskSection ? 'javascript:void(0);' : file.link;
+                    let clickAction = isTaskSection ? 'showTaskDetails(event, \'' + cleanName + '\', \'' + fileType + '\')' : 'handleDownload(event, \'' + cleanName + '\', \'' + file.link + '\')';
+                    
+                    // Se è un task, mostra la scadenza come etichetta
+                    const typeLabel = isTaskSection ? fileType.split(' ').join('<br>') : fileType;
+
+
+                    // Calcolo ritardo animazione
+                    const delayClass = index < 5 ? `delay-${(index + 1) * 100}` : '';
+
+                    // NUOVO DESIGN: .file-card (niente shadow-inner, background bianco, ombra esterna)
+                    html += `
+                        <li class="file-card rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center animate-enter ${delayClass}">
+                            <div class="flex items-center mb-4 sm:mb-0">
+                                <div class="h-10 w-auto min-w-[40px] px-2 rounded-lg bg-gray-50 border border-gray-100 flex items-center justify-center text-gray-400 mr-4 shrink-0 font-bold text-xs text-center leading-none">
+                                    ${typeLabel}
+                                </div>
+                                <div>
+                                    <h4 class="text-base font-semibold text-slate-700">${cleanName}</h4>
+                                    <p class="text-xs text-slate-400">${isTaskSection ? 'Compito da svolgere' : 'Disponibile per il download'}</p>
+                                </div>
+                            </div>
+                            <a href="${linkHref}" target="_blank" onclick="${clickAction}" 
+                                class="simple-download-btn py-2 px-5 rounded-lg text-sm w-full sm:w-auto text-center">
+                                ${buttonText}
+                            </a>
+                        </li>
+                    `;
+                });
+                html += '</ul>';
+            }
+
+            subjectView.innerHTML = html;
+        }
+
+        // Funzione per mostrare i dettagli del compito (simulazione di un calendario/task)
+        function showTaskDetails(event, taskName, taskDeadline) {
+             event.preventDefault();
+             
+             // Aggiorna l'icona del modal a Arancione/Orologio
+             modalIcon.innerHTML = '<svg class="h-8 w-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>';
+             modalIcon.classList.remove('bg-green-50');
+             modalIcon.classList.add('bg-orange-50');
+             
+             // Aggiorna il contenuto del modal
+             modalTitle.textContent = "Dettagli Compito";
+             modalMessage.innerHTML = `
+                <p class="text-slate-500 text-sm">
+                    Hai selezionato il compito: 
+                    <span class="font-semibold text-orange-600">${taskName}</span>
+                    <br>
+                    <span class="font-bold">Scadenza: ${taskDeadline}</span>
+                </p>
+                <p class="mt-4 text-xs text-slate-400 italic">
+                    (Questa è una simulazione del registro elettronico. Controlla il registro ufficiale per tutte le istruzioni.)
+                </p>
+             `;
+            
+            downloadModal.classList.remove('hidden');
+            downloadModal.classList.add('flex');
+        }
+
+
+        function showPage(pageName) {
+            currentPage = pageName;
+            homeView.classList.add('hidden');
+            subjectView.classList.add('hidden');
+            
+            if (pageName === 'home') {
+                homeView.classList.remove('hidden');
+            } else if (pageName === 'subject') {
+                subjectView.classList.remove('hidden');
+            }
+        }
+
+        function showSubject(subject) {
+            loadingSpinner.classList.remove('hidden');
+            homeView.classList.add('hidden');
+            
+            setTimeout(() => {
+                renderSubjectPage(subject);
+                loadingSpinner.classList.add('hidden');
+                showPage('subject');
+            }, 400); // Ritardo leggermente ridotto per rendere l'UI più scattante
+        }
+
+        function handleDownload(event, fileName, fileLink) {
+            event.preventDefault(); 
+            window.open(fileLink, '_blank');
+            
+            // Ripristina l'aspetto del modal per il download (verde)
+            modalIcon.innerHTML = '<svg class="h-8 w-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>';
+            modalIcon.classList.remove('bg-orange-50');
+            modalIcon.classList.add('bg-green-50');
+            
+            modalTitle.textContent = "Download Avviato";
+            modalMessage.innerHTML = `Stai scaricando: <br><span class="font-semibold text-indigo-600">${fileName}</span>`;
+            
+            downloadModal.classList.remove('hidden');
+            downloadModal.classList.add('flex');
+        }
+
+        function closeModal() {
+            downloadModal.classList.add('hidden');
+            downloadModal.classList.remove('flex');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderHomePage();
+            showPage('home');
+        });
+    </script>
+</body>
+</html>
